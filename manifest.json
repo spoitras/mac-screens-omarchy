@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "syl.mac-screens",
+  "name": "Mac Screens",
+  "version": "1.0.0",
+  "author": "spoitras",
+  "license": "MIT",
+  "description": "Discover Macs advertising Screen Sharing and connect via Remmina",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "Panel.qml"
+  },
+  "barWidget": {
+    "displayName": "Mac Screens",
+    "description": "Discover Macs advertising Screen Sharing and connect via Remmina",
+    "category": "Network",
+    "allowMultiple": false
+  }
+}
