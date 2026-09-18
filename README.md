@@ -38,11 +38,16 @@ The plugin looks for a file at that exact path for the Mac you clicked:
 
 - **If found**, it launches straight into the session:
   `nxplayer --session "~/Documents/NoMachine/Connection to <ip>.nxs"`
-- **If not found** (first time connecting to that Mac), it opens
-  `nxplayer --wizard` instead so you can create the connection. Point it at
-  the IP address shown under the Mac's name in the dropdown, and **save it
-  with the default name NoMachine suggests** (don't rename it) — every
-  click after that will auto-launch it.
+- **If not found** (first time connecting to that Mac), it launches
+  `nxplayer` with no arguments instead, which opens its GUI (New connection
+  wizard) so you can create the connection. There's no `--wizard` flag —
+  despite some NoMachine docs mentioning one, 10.1.7's actual `--help`
+  output only lists `--config`, `--geometry`, `--session`, `--hide`,
+  `--recording`, `--activegrab`, `--help` and `--version`; running it bare
+  is what actually opens the wizard. Point it at the IP address shown
+  under the Mac's name in the dropdown, and **save it with the default
+  name NoMachine suggests** (don't rename it) — every click after that
+  will auto-launch it.
 
 ## Install
 
