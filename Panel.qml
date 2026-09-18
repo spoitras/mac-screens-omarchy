@@ -28,7 +28,14 @@ Panel {
 
   function connectTo(mac) {
     if (!mac || !mac.address) return
-    Quickshell.execDetached(["remmina", "-c", "vnc://" + mac.address + ":" + mac.port])
+    // Prefer a saved profile (~/.local/share/remmina/VNC_<address>.remmina) so
+    // per-host settings like "disable smooth scrolling" actually apply —
+    // a bare quickconnect URI ignores saved profiles entirely.
+    Quickshell.execDetached(["bash", "-c",
+      'profile="$HOME/.local/share/remmina/VNC_$1.remmina"; ' +
+      'if [ -f "$profile" ]; then exec remmina -c "$profile"; ' +
+      'else exec remmina -c "vnc://$1:$2"; fi',
+      "bash", mac.address, mac.port])
     root.close()
   }
 
