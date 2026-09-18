@@ -34,10 +34,14 @@ Panel {
     // <address>.nxs" by default, so we look for that convention and launch
     // it directly. If it's not there yet, fall back to the wizard so the
     // user can create + save it once; every click after that auto-launches.
+    // Full path because NoMachine's tar.gz install (unlike the old AUR
+    // package) doesn't put nxplayer on PATH, and its wrapper script breaks
+    // if invoked through a symlink instead of its real location.
     Quickshell.execDetached(["bash", "-c",
+      'nxplayer="/usr/NX/bin/nxplayer"; ' +
       'session="$HOME/Documents/NoMachine/Connection to $1.nxs"; ' +
-      'if [ -f "$session" ]; then exec nxplayer --session "$session"; ' +
-      'else exec nxplayer --wizard; fi',
+      'if [ -f "$session" ]; then exec "$nxplayer" --session "$session"; ' +
+      'else exec "$nxplayer" --wizard; fi',
       "bash", mac.address])
     root.close()
   }

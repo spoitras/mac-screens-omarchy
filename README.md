@@ -59,12 +59,35 @@ user-owned plugins — the directory name is what Omarchy treats as the ID.)
 
 ### Dependencies
 
+The AUR `nomachine` / `nomachine-enterprise-client` packages are currently
+broken — both are pinned to a `9.8.2` build that NoMachine has removed from
+their download servers (NoMachine rebranded to "Personal Edition" with the
+v10 release and no AUR package has picked up the new naming/version yet).
+Until that's fixed upstream, install the official tarball directly:
+
 ```sh
-yay -S nomachine
+curl -LO https://download.nomachine.com/download/10.1/Linux/nomachine-personal-edition_10.1.7_1_x86_64.tar.gz
+cd /usr
+sudo tar xzf ~/nomachine-personal-edition_10.1.7_1_x86_64.tar.gz
+sudo /usr/NX/nxserver --install redhat
 ```
 
-`nomachine` (the official client, from the AUR) installs `nxplayer` to
-`/usr/NX/bin/nxplayer`, which needs to be on `PATH`.
+(`redhat` is the correct `SYSTEM` value for Arch too — see NoMachine's
+[Gentoo/Arch install notes](https://kb.nomachine.com/AR03L00789). Check
+[download.nomachine.com](https://download.nomachine.com/personal-edition/)
+for the current version before running this, since NoMachine prunes old
+build files from their servers relatively quickly.)
+
+This installs to `/usr/NX/` rather than through pacman, so it won't show up
+in `pacman -Qi` and upgrades/removal go through NoMachine's own tools
+(`nxserver --update`, or `nxserver --uninstall && rm -rf /usr/NX`) — see
+their [command line install guide](https://kb.nomachine.com/AR01L00775).
+
+Unlike the AUR package, this doesn't put `nxplayer` on `PATH` — the plugin
+calls it by its full path, `/usr/NX/bin/nxplayer`, directly (a plain
+symlink into `/usr/local/bin` won't work: nxplayer's wrapper script
+resolves its own real location from `$0`, and breaks if invoked through a
+symlink instead of its real path).
 
 You'll also need the **NoMachine server** app installed and running on each
 Mac Mini — it's a separate download from
