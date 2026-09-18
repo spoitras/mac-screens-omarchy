@@ -28,12 +28,15 @@ Panel {
 
   function connectTo(mac) {
     if (!mac || !mac.address) return
-    // Prefer a saved profile (~/.local/share/remmina/VNC_<address>.remmina) so
-    // per-host settings like "disable smooth scrolling" actually apply —
-    // a bare quickconnect URI ignores saved profiles entirely.
+    // Prefer a saved profile so per-host settings (e.g. "disable smooth
+    // scrolling") actually apply — a bare quickconnect URI ignores saved
+    // profiles entirely. Match by the profile's "server=<address>" line
+    // rather than a filename convention: Remmina renames its own files
+    // (e.g. "VNC_<ip>.remmina" -> "group_vnc_<ip-with-dashes>_<ip>.remmina")
+    // whenever a connection is re-saved through its own GUI.
     Quickshell.execDetached(["bash", "-c",
-      'profile="$HOME/.local/share/remmina/VNC_$1.remmina"; ' +
-      'if [ -f "$profile" ]; then exec remmina -c "$profile"; ' +
+      'profile=$(grep -Fxl "server=$1" "$HOME/.local/share/remmina/"*.remmina 2>/dev/null | head -1); ' +
+      'if [ -n "$profile" ]; then exec remmina -c "$profile"; ' +
       'else exec remmina -c "vnc://$1:$2"; fi',
       "bash", mac.address, mac.port])
     root.close()
