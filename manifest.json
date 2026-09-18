@@ -5,7 +5,7 @@
   "version": "1.0.0",
   "author": "spoitras",
   "license": "MIT",
-  "description": "Discover Macs advertising Screen Sharing and connect via Remmina",
+  "description": "Discover Macs advertising Screen Sharing and connect via NoMachine",
   "kinds": [
     "bar-widget"
   ],
@@ -14,7 +14,7 @@
   },
   "barWidget": {
     "displayName": "Mac Screens",
-    "description": "Discover Macs advertising Screen Sharing and connect via Remmina",
+    "description": "Discover Macs advertising Screen Sharing and connect via NoMachine",
     "category": "Network",
     "allowMultiple": false
   }

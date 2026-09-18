@@ -28,7 +28,17 @@ Panel {
 
   function connectTo(mac) {
     if (!mac || !mac.address) return
-    Quickshell.execDetached(["remmina", "-c", "vnc://" + mac.address + ":" + mac.port])
+    // nxplayer has no quickconnect flag (unlike Remmina's -c vnc://host) —
+    // it only accepts --session FILE. NoMachine's own connection wizard
+    // saves new connections as "~/Documents/NoMachine/Connection to
+    // <address>.nxs" by default, so we look for that convention and launch
+    // it directly. If it's not there yet, fall back to the wizard so the
+    // user can create + save it once; every click after that auto-launches.
+    Quickshell.execDetached(["bash", "-c",
+      'session="$HOME/Documents/NoMachine/Connection to $1.nxs"; ' +
+      'if [ -f "$session" ]; then exec nxplayer --session "$session"; ' +
+      'else exec nxplayer --wizard; fi',
+      "bash", mac.address])
     root.close()
   }
 
@@ -181,7 +191,7 @@ Panel {
         Text {
           textFormat: Text.PlainText
           Layout.fillWidth: true
-          text: row.mac ? row.mac.address + ":" + row.mac.port : ""
+          text: row.mac ? row.mac.address : ""
           color: root.dim
           font.family: root.fontFamily
           font.pixelSize: Style.font.caption
