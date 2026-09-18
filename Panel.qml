@@ -28,25 +28,7 @@ Panel {
 
   function connectTo(mac) {
     if (!mac || !mac.address) return
-    // nxplayer has no quickconnect flag (unlike Remmina's -c vnc://host) —
-    // it only accepts --session FILE (there is no --wizard flag either,
-    // despite some NoMachine docs mentioning one — confirmed against
-    // 10.1.7's actual --help output). NoMachine's own connection wizard
-    // saves new connections as "~/Documents/NoMachine/Connection to
-    // <address>.nxs" by default, so we look for that convention and launch
-    // it directly. If it's not there yet, fall back to running nxplayer
-    // with no arguments at all, which opens its GUI (New connection
-    // wizard) so the user can create + save it once; every click after
-    // that auto-launches.
-    // Full path because NoMachine's tar.gz install (unlike the old AUR
-    // package) doesn't put nxplayer on PATH, and its wrapper script breaks
-    // if invoked through a symlink instead of its real location.
-    Quickshell.execDetached(["bash", "-c",
-      'nxplayer="/usr/NX/bin/nxplayer"; ' +
-      'session="$HOME/Documents/NoMachine/Connection to $1.nxs"; ' +
-      'if [ -f "$session" ]; then exec "$nxplayer" --session "$session"; ' +
-      'else exec "$nxplayer"; fi',
-      "bash", mac.address])
+    Quickshell.execDetached(["remmina", "-c", "vnc://" + mac.address + ":" + mac.port])
     root.close()
   }
 
@@ -199,7 +181,7 @@ Panel {
         Text {
           textFormat: Text.PlainText
           Layout.fillWidth: true
-          text: row.mac ? row.mac.address : ""
+          text: row.mac ? row.mac.address + ":" + row.mac.port : ""
           color: root.dim
           font.family: root.fontFamily
           font.pixelSize: Style.font.caption

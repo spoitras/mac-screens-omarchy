@@ -2,11 +2,11 @@
 
 A bar widget for [Omarchy](https://omarchy.org/) that finds Macs advertising
 **Screen Sharing** on your LAN and connects to them with
-[NoMachine](https://www.nomachine.com/) for a fast, low-latency remote
-desktop session.
+[Remmina](https://remmina.org/) — a lightweight, no-config alternative to
+typing `vnc://` URLs by hand.
 
 ```
-[bar icon] ──click──► avahi-browse (_rfb._tcp) ──► dropdown of Macs ──click──► nxplayer --session "Connection to <ip>.nxs"
+[bar icon] ──click──► avahi-browse (_rfb._tcp) ──► dropdown of Macs ──click──► remmina -c vnc://<ip>:<port>
 ```
 
 ## How it works
@@ -17,37 +17,14 @@ polling infrastructure needed. Clicking the bar icon runs
 `avahi-browse -r -p -t _rfb._tcp`, decodes each Mac's Bonjour name (including
 proper UTF-8 handling for names with non-ASCII characters, like curly
 apostrophes), and lists every Mac found, refreshing every 15 seconds while
-the dropdown is open.
+the dropdown is open. Clicking a Mac in the list launches Remmina against
+its already-resolved IP address directly (not its `.local` hostname, which
+avoids an mDNS resolution stall on the first connection).
 
-Note this only uses Screen Sharing for *discovery* — the actual remote
-desktop session runs over NoMachine (NX protocol, port 4000), which is a
-separate app you install on the Mac alongside (or instead of using) Screen
-Sharing.
-
-Clicking a Mac in the list launches NoMachine's client, `nxplayer`, against
-its already-resolved IP address. Unlike Remmina, `nxplayer` has no
-quickconnect flag — it only knows how to open a saved `.nxs` connection
-file via `--session`. NoMachine's own connection wizard saves new
-connections by default as:
-
-```
-~/Documents/NoMachine/Connection to <ip>.nxs
-```
-
-The plugin looks for a file at that exact path for the Mac you clicked:
-
-- **If found**, it launches straight into the session:
-  `nxplayer --session "~/Documents/NoMachine/Connection to <ip>.nxs"`
-- **If not found** (first time connecting to that Mac), it launches
-  `nxplayer` with no arguments instead, which opens its GUI (New connection
-  wizard) so you can create the connection. There's no `--wizard` flag —
-  despite some NoMachine docs mentioning one, 10.1.7's actual `--help`
-  output only lists `--config`, `--geometry`, `--session`, `--hide`,
-  `--recording`, `--activegrab`, `--help` and `--version`; running it bare
-  is what actually opens the wizard. Point it at the IP address shown
-  under the Mac's name in the dropdown, and **save it with the default
-  name NoMachine suggests** (don't rename it) — every click after that
-  will auto-launch it.
+Remmina's VNC plugin automatically negotiates Apple's security type 30
+(the same Diffie-Hellman based auth Screen Sharing itself uses), so you log
+in with the Mac's actual user account name and password — no separate VNC
+password to set up.
 
 ## Install
 
@@ -64,55 +41,25 @@ user-owned plugins — the directory name is what Omarchy treats as the ID.)
 
 ### Dependencies
 
-The AUR `nomachine` / `nomachine-enterprise-client` packages are currently
-broken — both are pinned to a `9.8.2` build that NoMachine has removed from
-their download servers (NoMachine rebranded to "Personal Edition" with the
-v10 release and no AUR package has picked up the new naming/version yet).
-Until that's fixed upstream, install the official tarball directly:
-
 ```sh
-curl -LO https://download.nomachine.com/download/10.1/Linux/nomachine-personal-edition_10.1.7_1_x86_64.tar.gz
-cd /usr
-sudo tar xzf ~/nomachine-personal-edition_10.1.7_1_x86_64.tar.gz
-sudo /usr/NX/nxserver --install redhat
+omarchy pkg add remmina libvncserver
 ```
 
-(`redhat` is the correct `SYSTEM` value for Arch too — see NoMachine's
-[Gentoo/Arch install notes](https://kb.nomachine.com/AR03L00789). Check
-[download.nomachine.com](https://download.nomachine.com/personal-edition/)
-for the current version before running this, since NoMachine prunes old
-build files from their servers relatively quickly.)
-
-This installs to `/usr/NX/` rather than through pacman, so it won't show up
-in `pacman -Qi` and upgrades/removal go through NoMachine's own tools
-(`nxserver --update`, or `nxserver --uninstall && rm -rf /usr/NX`) — see
-their [command line install guide](https://kb.nomachine.com/AR01L00775).
-
-Unlike the AUR package, this doesn't put `nxplayer` on `PATH` — the plugin
-calls it by its full path, `/usr/NX/bin/nxplayer`, directly (a plain
-symlink into `/usr/local/bin` won't work: nxplayer's wrapper script
-resolves its own real location from `$0`, and breaks if invoked through a
-symlink instead of its real path).
-
-You'll also need the **NoMachine server** app installed and running on each
-Mac Mini — it's a separate download from
-[nomachine.com](https://www.nomachine.com/download), not something bundled
-with macOS the way Screen Sharing is. Screen Sharing itself can stay
-enabled; it's only used here for LAN discovery, not for the actual session.
+`libvncserver` isn't pulled in automatically as a dependency of `remmina`
+even though its VNC plugin (`remmina-plugin-vnc.so`) requires
+`libvncclient.so.1` to load at all — without it, Remmina has no VNC support.
 
 ## Known issue: first connection to a headless Mac times out
 
-If the Mac has no physical display attached, the OS has to spin up a
-virtual display/WindowServer session on the very first remote connection,
-which can lose the race against the client's connection timeout — the
-first attempt times out right after you enter your password, and the
-immediate retry succeeds because the session is already warm. This applied
-to the previous Remmina/Screen-Sharing setup; it's not yet confirmed
-whether NoMachine sessions hit the same issue against a headless Mac.
+If the Mac has no physical display attached, `screensharingd` has to spin up
+a virtual display/WindowServer session on the very first Screen Sharing
+connection, which often loses the race against the VNC client's connection
+timeout — the first attempt times out right after you enter your password,
+and the immediate retry succeeds because the session is already warm.
 
 The real fix is a cheap HDMI dummy plug / EDID-emulator dongle on the Mac,
-which keeps a "real" display always active so the OS never needs to create
-one on demand.
+which keeps a "real" display always active so `screensharingd` never needs
+to create one on demand.
 
 ## License
 
